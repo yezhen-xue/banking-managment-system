@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银行交易管理系统</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .forms-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .form-section {
+            flex: 0 0 48%;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .transactions {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .edit-btn {
+            background-color: #f39c12;
+        }
+        .edit-btn:hover {
+            background-color: #e67e22;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 50%;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #e74c3c;
+        }
+        .filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .filters label {
+            margin-bottom: 0;
+            display: inline-block;
+            width: auto;
+        }
+        .filters select, .filters input {
+            width: auto;
+            margin-bottom: 0;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+        }
+        .error {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>银行交易管理系统</h1>
+        
+        <div class="forms-container">
+            <div class="form-section">
+                <h2>创建新交易</h2>
+                <form id="createForm">
+                    <div>
+                        <label for="amount">金额:</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="请输入金额">
+                    </div>
+                    
+                    <div>
+                        <label for="description">描述:</label>
+                        <input type="text" id="description" required placeholder="请输入交易描述">
+                    </div>
+                    
+                    <div>
+                        <label for="type">类型:</label>
+                        <select id="type" required>
+                            <option value="">请选择交易类型</option>
+                            <option value="INCOME">收入</option>
+                            <option value="EXPENSE">支出</option>
+                            <option value="TRANSFER">转账</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit">添加交易</button>
+                </form>
+                <div id="createMessage" class="success" style="display: none;"></div>
+            </div>
+            
+            <div class="form-section">
+                <h2>筛选交易</h2>
+                <form id="filterForm">
+                    <div class="filters">
+                        <label for="filterType">类型:</label>
+                        <select id="filterType">
+                            <option value="">全部</option>
+                            <option value="INCOME">收入</option>
+                            <option value="EXPENSE">支出</option>
+                            <option value="TRANSFER">转账</option>
+                        </select>
+                        
+                        <label for="minAmount">最小金额:</label>
+                        <input type="number" id="minAmount" step="0.01" placeholder="最小值">
+                        
+                        <label for="maxAmount">最大金额:</label>
+                        <input type="number" id="maxAmount" step="0.01" placeholder="最大值">
+                    </div>
+                    
+                    <button type="submit">筛选</button>
+                    <button type="button" id="resetFilter">重置</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="transactions">
+            <h2>交易列表</h2>
+            <table id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>金额</th>
+                        <th>描述</th>
+                        <th>类型</th>
+                        <th>日期时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                    <!-- 交易数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+            
+            <div class="pagination" id="pagination">
+                <button id="prevPage">上一页</button>
+                <span id="pageInfo">第 1 页</span>
+                <button id="nextPage">下一页</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑交易的模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>编辑交易</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                
+                <div>
+                    <label for="editAmount">金额:</label>
+                    <input type="number" id="editAmount" step="0.01" required>
+                </div>
+                
+                <div>
+                    <label for="editDescription">描述:</label>
+                    <input type="text" id="editDescription" required>
+                </div>
+                
+                <div>
+                    <label for="editType">类型:</label>
+                    <select id="editType" required>
+                        <option value="INCOME">收入</option>
+                        <option value="EXPENSE">支出</option>
+                        <option value="TRANSFER">转账</option>
+                    </select>
+                </div>
+                
+                <button type="submit">保存修改</button>
+            </form>
+            <div id="editMessage" class="error" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载时的操作
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = '/api/transactions';
+            let currentPage = 0;
+            const pageSize = 10;
+            
+            // 获取并显示交易列表
+            function loadTransactions(page = 0, filters = {}) {
+                let url = `${apiUrl}?page=${page}&size=${pageSize}`;
+                
+                // 添加筛选条件
+                if (filters.type) url += `&type=${filters.type}`;
+                if (filters.minAmount) url += `&minAmount=${filters.minAmount}`;
+                if (filters.maxAmount) url += `&maxAmount=${filters.maxAmount}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        renderTransactions(data);
+                        document.getElementById('pageInfo').textContent = `第 ${page + 1} 页`;
+                        currentPage = page;
+                    })
+                    .catch(error => console.error('加载交易失败:', error));
+            }
+            
+            // 渲染交易列表
+            function renderTransactions(transactions) {
+                const tbody = document.getElementById('transactionsBody');
+                tbody.innerHTML = '';
+                
+                if (transactions.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="6" style="text-align: center;">暂无交易数据</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+                
+                transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    
+                    // 格式化日期时间
+                    const date = new Date(transaction.timestamp);
+                    const formattedDate = date.toLocaleString('zh-CN');
+                    
+                    // 根据交易类型获取中文描述
+                    let typeText = '';
+                    switch(transaction.type) {
+                        case 'INCOME': typeText = '收入'; break;
+                        case 'EXPENSE': typeText = '支出'; break;
+                        case 'TRANSFER': typeText = '转账'; break;
+                        default: typeText = transaction.type;
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${transaction.id}</td>
+                        <td>${transaction.amount.toFixed(2)}</td>
+                        <td>${transaction.description}</td>
+                        <td>${typeText}</td>
+                        <td>${formattedDate}</td>
+                        <td class="actions">
+                            <button class="edit-btn" data-id="${transaction.id}">编辑</button>
+                            <button class="delete-btn" data-id="${transaction.id}">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // 为编辑按钮添加点击事件
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        openEditModal(id);
+                    });
+                });
+                
+                // 为删除按钮添加点击事件
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        if (confirm('确定要删除这笔交易吗？')) {
+                            deleteTransaction(id);
+                        }
+                    });
+                });
+            }
+            
+            // 创建新交易
+            document.getElementById('createForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const transaction = {
+                    amount: parseFloat(document.getElementById('amount').value),
+                    description: document.getElementById('description').value,
+                    type: document.getElementById('type').value
+                };
+                
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(transaction)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 清空表单
+                    document.getElementById('createForm').reset();
+                    
+                    // 显示成功消息
+                    const messageElement = document.getElementById('createMessage');
+                    messageElement.textContent = '交易创建成功！';
+                    messageElement.style.display = 'block';
+                    
+                    // 3秒后隐藏消息
+                    setTimeout(() => {
+                        messageElement.style.display = 'none';
+                    }, 3000);
+                    
+                    // 重新加载交易列表
+                    loadTransactions(currentPage);
+                })
+                .catch(error => console.error('创建交易失败:', error));
+            });
+            
+            // 筛选交易
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const filters = {
+                    type: document.getElementById('filterType').value,
+                    minAmount: document.getElementById('minAmount').value,
+                    maxAmount: document.getElementById('maxAmount').value
+                };
+                
+                // 重置到第一页并应用筛选条件
+                loadTransactions(0, filters);
+            });
+            
+            // 重置筛选条件
+            document.getElementById('resetFilter').addEventListener('click', function() {
+                document.getElementById('filterForm').reset();
+                loadTransactions(0);
+            });
+            
+            // 分页控制
+            document.getElementById('prevPage').addEventListener('click', function() {
+                if (currentPage > 0) {
+                    loadTransactions(currentPage - 1, getFilters());
+                }
+            });
+            
+            document.getElementById('nextPage').addEventListener('click', function() {
+                loadTransactions(currentPage + 1, getFilters());
+            });
+            
+            // 获取当前筛选条件
+            function getFilters() {
+                return {
+                    type: document.getElementById('filterType').value,
+                    minAmount: document.getElementById('minAmount').value,
+                    maxAmount: document.getElementById('maxAmount').value
+                };
+            }
+            
+            // 打开编辑模态框
+            function openEditModal(id) {
+                // 获取交易数据
+                fetch(`${apiUrl}/${id}`)
+                    .then(response => response.json())
+                    .then(transaction => {
+                        document.getElementById('editId').value = transaction.id;
+                        document.getElementById('editAmount').value = transaction.amount;
+                        document.getElementById('editDescription').value = transaction.description;
+                        document.getElementById('editType').value = transaction.type;
+                        
+                        // 显示模态框
+                        document.getElementById('editModal').style.display = 'block';
+                    })
+                    .catch(error => console.error('获取交易详情失败:', error));
+            }
+            
+            // 保存编辑后的交易
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('editId').value;
+                const transaction = {
+                    amount: parseFloat(document.getElementById('editAmount').value),
+                    description: document.getElementById('editDescription').value,
+                    type: document.getElementById('editType').value
+                };
+                
+                fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(transaction)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('更新交易失败');
+                })
+                .then(data => {
+                    // 关闭模态框
+                    document.getElementById('editModal').style.display = 'none';
+                    
+                    // 重新加载交易列表
+                    loadTransactions(currentPage, getFilters());
+                })
+                .catch(error => {
+                    const messageElement = document.getElementById('editMessage');
+                    messageElement.textContent = error.message;
+                    messageElement.style.display = 'block';
+                    
+                    // 3秒后隐藏消息
+                    setTimeout(() => {
+                        messageElement.style.display = 'none';
+                    }, 3000);
+                });
+            });
+            
+            // 删除交易
+            function deleteTransaction(id) {
+                fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // 重新加载交易列表
+                        loadTransactions(currentPage, getFilters());
+                    } else {
+                        throw new Error('删除交易失败');
+                    }
+                })
+                .catch(error => console.error(error.message));
+            }
+            
+            // 关闭模态框
+            document.querySelector('.close').addEventListener('click', function() {
+                document.getElementById('editModal').style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭模态框
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('editModal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 初始加载交易列表
+            loadTransactions();
+        });
+    </script>
+</body>
+</html> 
