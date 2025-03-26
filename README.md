@@ -493,10 +493,6 @@ docker run -p 8080:8080 -e "SPRING_PROFILES_ACTIVE=prod" banking-app
 - [x] Docker Compose配置
 - [x] 监控端点配置
 - [x] API文档集成 (Swagger)
-- [ ] 异常处理测试完善
-- [ ] 控制器层分支覆盖率改进
-- [ ] 配置类测试加强
-- [ ] 数据持久化实现
 
 ## 外部依赖
 
